@@ -60,7 +60,7 @@ module Mailboxer
         Mailboxer::Notification.notify_all([self],subject,body,obj,sanitize_text,notification_code,send_mail,sender)
       end
 
-      #Sends a messages, starting a new conversation, with the messageable
+      #Sends a message, starting a new conversation, with the messageable
       #as originator
       def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now, draft = false)
         convo = Mailboxer::ConversationBuilder.new({
