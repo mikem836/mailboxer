@@ -62,7 +62,7 @@ module Mailboxer
 
       #Sends a messages, starting a new conversation, with the messageable
       #as originator
-      def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now)
+      def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now, draft = false)
         convo = Mailboxer::ConversationBuilder.new({
           :subject    => subject,
           :created_at => message_timestamp,
@@ -76,11 +76,18 @@ module Mailboxer
           :body         => msg_body,
           :subject      => subject,
           :attachment   => attachment,
+          :draft        => draft,
           :created_at   => message_timestamp,
           :updated_at   => message_timestamp
         }).build
 
-        message.deliver false, sanitize_text
+        message.deliver false, sanitize_text, draft
+      end
+
+      #Creates a draft message, starting a new conversation, with the messageable
+      #as originator
+      def create_draft(recipients, msg_body, subject, sanitize_text = true, attachment = nil, message_timestamp = Time.now)
+        send_message(recipients, msg_body, subject, sanitize_text, attachment, message_timestamp, true)
       end
 
       #Basic reply method. USE NOT RECOMMENDED.
