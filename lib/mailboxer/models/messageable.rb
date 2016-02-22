@@ -83,7 +83,7 @@ module Mailboxer
         message.deliver false, sanitize_text
       end
 
-      #Basic reply method. USE NOT RECOMENDED.
+      #Basic reply method. USE NOT RECOMMENDED.
       #Use reply_to_sender, reply_to_all and reply_to_conversation instead.
       def reply(conversation, recipients, reply_body, subject=nil, sanitize_text=true, attachment=nil)
         subject = subject || "#{conversation.subject}"
