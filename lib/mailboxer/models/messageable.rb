@@ -55,7 +55,7 @@ module Mailboxer
         mailbox.inbox(unread: true).count
       end
 
-      #Sends a messages, starting a new conversation, with the messageable
+      #Sends a message, starting a new conversation, with the messageable
       #as originator
       def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now)
         convo = Mailboxer::ConversationBuilder.new({
@@ -78,7 +78,7 @@ module Mailboxer
         message.deliver false, sanitize_text
       end
 
-      #Basic reply method. USE NOT RECOMENDED.
+      #Basic reply method. USE NOT RECOMMENDED.
       #Use reply_to_sender, reply_to_all and reply_to_conversation instead.
       def reply(conversation, recipients, reply_body, subject=nil, sanitize_text=true, attachment=nil)
         subject = subject || "#{conversation.subject}"

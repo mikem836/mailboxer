@@ -20,8 +20,8 @@ class Mailboxer::Message < Mailboxer::Notification
     end
   end
 
-  #Delivers a Message. USE NOT RECOMENDED.
-  #Use Mailboxer::Models::Message.send_message instead.
+  #Delivers a Message. USE NOT RECOMMENDED.
+  #Use Mailboxer::Models::Messageable.send_message instead.
   def deliver(reply = false, should_clean = true)
     self.clean if should_clean
 
