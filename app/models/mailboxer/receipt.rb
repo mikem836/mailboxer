@@ -23,6 +23,7 @@ class Mailboxer::Receipt < ActiveRecord::Base
   }
   scope :sentbox, lambda { where(:mailbox_type => "sentbox") }
   scope :inbox, lambda { where(:mailbox_type => "inbox") }
+  scope :threaded, lambda { where(:mailbox_type => ["inbox", "sentbox"]) }
   scope :drafts, lambda { where(:mailbox_type => "drafts") }
   scope :trash, lambda { where(:trashed => true, :deleted => false) }
   scope :not_trash, lambda { where(:trashed => false) }

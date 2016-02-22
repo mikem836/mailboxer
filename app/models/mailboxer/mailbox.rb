@@ -55,6 +55,14 @@ class Mailboxer::Mailbox
     conversations(options)
   end
 
+  #Returns the conversations in the inbox/sentbox of messageable
+  #
+  #Same as conversations({ :mailbox_type => "threaded" })
+  def threaded(options = {})
+    options = options.merge(:mailbox_type => "threaded")
+    conversations(options)
+  end
+
   #Returns the conversations in the draft box of messageable
   #
   #Same as conversations({ :mailbox_type => "drafts" })
@@ -121,10 +129,12 @@ class Mailboxer::Mailbox
     case mailbox
     when 'inbox'
       Mailboxer::Conversation.inbox(messageable)
-    when 'drafts'
-      Mailboxer::Conversation.drafts(messageable)
     when 'sentbox'
       Mailboxer::Conversation.sentbox(messageable)
+    when 'threaded'
+      Mailboxer::Conversation.threaded(messageable)
+    when 'drafts'
+      Mailboxer::Conversation.drafts(messageable)
     when 'trash'
       Mailboxer::Conversation.trash(messageable)
     when 'not_trash'
