@@ -1,6 +1,6 @@
 class Mailboxer::Receipt < ActiveRecord::Base
   self.table_name = :mailboxer_receipts
-  attr_accessible :trashed, :is_read, :deleted if Mailboxer.protected_attributes?
+  attr_accessible :mailbox_type, :trashed, :is_read, :deleted, :delivery_method, :message_id if Mailboxer.protected_attributes?
 
   belongs_to :notification, :class_name => "Mailboxer::Notification"
   belongs_to :receiver, :polymorphic => :true, :required => false
@@ -23,6 +23,9 @@ class Mailboxer::Receipt < ActiveRecord::Base
   }
   scope :sentbox, lambda { where(:mailbox_type => "sentbox") }
   scope :inbox, lambda { where(:mailbox_type => "inbox") }
+  scope :drafts, lambda { where(:mailbox_type => "drafts") }
+  scope :unsent, lambda { where(:mailbox_type => "unsent") }
+  scope :not_draft, lambda { where.not(:mailbox_type => ["drafts", "unsent"]) }
   scope :trash, lambda { where(:trashed => true, :deleted => false) }
   scope :not_trash, lambda { where(:trashed => false) }
   scope :deleted, lambda { where(:deleted => true) }

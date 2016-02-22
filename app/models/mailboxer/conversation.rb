@@ -23,6 +23,9 @@ class Mailboxer::Conversation < ActiveRecord::Base
   scope :sentbox, lambda {|participant|
     participant(participant).merge(Mailboxer::Receipt.sentbox.not_trash.not_deleted)
   }
+  scope :drafts, lambda { |participant|
+    participant(participant).merge(Mailboxer::Receipt.drafts)
+  }
   scope :trash, lambda {|participant|
     participant(participant).merge(Mailboxer::Receipt.trash)
   }
@@ -93,14 +96,14 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Returns an array of participants
-  def recipients
-    return [] unless original_message
-    Array original_message.recipients
+  def recipients(include_draft = false)
+    return [] unless last_message(include_draft)
+    Array last_message(include_draft).recipients
   end
 
   #Returns an array of participants
-  def participants
-    recipients
+  def participants(include_draft = false)
+    recipients(include_draft)
   end
 
   #Originator of the conversation.
@@ -119,8 +122,11 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Last message in the conversation.
-  def last_message
-    @last_message ||= messages.order(:created_at => :desc, :id => :desc).first
+  def last_message(include_draft = false)
+    return @last_message if @last_message
+    m = messages
+    m = m.not_draft unless include_draft
+    @last_message = m.order(:created_at => :desc, :id => :desc).first
   end
 
   #Returns the messages of the conversation for one participant
@@ -135,8 +141,10 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Returns the number of messages of the conversation
-  def count_messages
-    Mailboxer::Message.conversation(self).count
+  def count_messages(include_draft = false)
+    messages = Mailboxer::Message.conversation(self)
+    messages = messages.not_draft unless include_draft
+    messages.count
   end
 
   #Returns true if the messageable is a participant of the conversation
@@ -146,14 +154,24 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Adds a new participant to the conversation
-  def add_participant(participant)
+  def add_participant(participant, draft = false, send_email = false)
+    last = messages.last
+
     messages.each do |message|
-      Mailboxer::ReceiptBuilder.new({
+      mailbox_type = draft || message.draft ? "unsent" : "inbox"
+
+      receipt = Mailboxer::ReceiptBuilder.new({
         :notification => message,
         :receiver     => participant,
         :updated_at   => message.updated_at,
-        :created_at   => message.created_at
-      }).build.save
+        :created_at   => message.created_at,
+        :mailbox_type => mailbox_type
+      }).build
+      receipt.save
+
+      if send_email && message == last
+        Mailboxer::MailDispatcher.new(message, [receipt]).call
+      end
     end
   end
 

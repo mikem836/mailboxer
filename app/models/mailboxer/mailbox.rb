@@ -60,6 +60,14 @@ class Mailboxer::Mailbox
     conversations(options)
   end
 
+  #Returns the conversations in the draft box of messageable
+  #
+  #Same as conversations({ :mailbox_type => "drafts" })
+  def drafts(options = {})
+    options = options.merge(:mailbox_type => "drafts")
+    conversations(options)
+  end
+
   #Returns the conversations in the trash of messageable
   #
   #Same as conversations({:mailbox_type => 'trash'})
@@ -118,11 +126,13 @@ class Mailboxer::Mailbox
     case mailbox
     when 'inbox'
       Mailboxer::Conversation.inbox(messageable)
+    when 'drafts'
+      Mailboxer::Conversation.drafts(messageable)
     when 'sentbox'
       Mailboxer::Conversation.sentbox(messageable)
     when 'trash'
       Mailboxer::Conversation.trash(messageable)
-    when  'not_trash'
+    when 'not_trash'
       Mailboxer::Conversation.not_trash(messageable)
     else
       Mailboxer::Conversation.participant(messageable)

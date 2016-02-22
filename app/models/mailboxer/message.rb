@@ -22,28 +22,82 @@ class Mailboxer::Message < Mailboxer::Notification
 
   #Delivers a Message. USE NOT RECOMMENDED.
   #Use Mailboxer::Models::Messageable.send_message instead.
-  def deliver(reply = false, should_clean = true)
+  def deliver(reply = false, should_clean = true, draft = false)
     self.clean if should_clean
 
     #Receiver receipts
+    mailbox_type = draft ? "unsent" : "inbox"
     receiver_receipts = recipients.map do |r|
-      receipts.build(receiver: r, mailbox_type: 'inbox', is_read: false)
+      receipts.build(receiver: r, mailbox_type: mailbox_type, is_read: false)
     end
 
     #Sender receipt
+    mailbox_type = draft ? "drafts" : "sentbox"
     sender_receipt =
-      receipts.build(receiver: sender, mailbox_type: 'sentbox', is_read: true)
+      receipts.build(receiver: sender, mailbox_type: mailbox_type, is_read: true)
 
     if valid?
+      Mailboxer::MailDispatcher.new(self, receiver_receipts).call if !draft
       save!
-      Mailboxer::MailDispatcher.new(self, receiver_receipts).call
 
-      conversation.touch if reply
+      conversation.touch if reply && !draft
 
       self.recipients = nil
 
-      on_deliver_callback.call(self) if on_deliver_callback
+      on_deliver_callback.call(self) if on_deliver_callback && !draft
     end
+
+    sender_receipt
+  end
+
+  #Updates a draft message
+  def update_draft(recipients, msg_body, subject, attachment = nil, reply = false, should_clean = true)
+    self.body       = msg_body
+    self.subject    = subject
+    self.attachment = attachment
+
+    self.clean if should_clean
+
+    conversation.subject = self.subject if subject_changed?
+
+    #Receiver receipts
+    unsent = receipts.unsent
+    receiver_receipts = recipients.map { |r|
+      unsent.find { |receipt| receipt.receiver == r } ||
+      receipts.build(receiver: r, mailbox_type: "unsent", is_read: false)
+    }
+
+    #Sender receipt
+    sender_receipt = receipt_for(sender).first ||
+      receipts.build(receiver: sender, mailbox_type: "drafts", is_read: true)
+
+    if valid?
+      save!
+      conversation.touch if !reply
+    end
+
+    sender_receipt
+  end
+
+  #Delivers a draft message
+  def deliver_draft
+    self.draft = false
+
+    #Receiver receipts
+    receiver_receipts = receipts.unsent.to_a
+    receipts.unsent.move_to_inbox
+
+    #Sender receipt
+    sender_receipt = receipts.drafts.first
+    sender_receipt.move_to_sentbox
+
+    conversation.touch
+
+    Mailboxer::MailDispatcher.new(self, receiver_receipts).call
+    save!
+
+    on_deliver_callback.call(self) if on_deliver_callback
+
     sender_receipt
   end
 end

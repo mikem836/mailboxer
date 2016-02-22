@@ -29,6 +29,8 @@ class Mailboxer::Notification < ActiveRecord::Base
   scope :unexpired, lambda {
     where("#{Mailboxer::Notification.quoted_table_name}.expires is NULL OR #{Mailboxer::Notification.quoted_table_name}.expires > ?", Time.now)
   }
+  scope :draft, lambda { where(:draft => true) }
+  scope :not_draft, lambda { where(:draft => false) }
 
   class << self
     #Sends a Notification to all the recipients

@@ -57,7 +57,7 @@ module Mailboxer
 
       #Sends a message, starting a new conversation, with the messageable
       #as originator
-      def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now)
+      def send_message(recipients, msg_body, subject, sanitize_text=true, attachment=nil, message_timestamp = Time.now, draft = false)
         convo = Mailboxer::ConversationBuilder.new({
           :subject    => subject,
           :created_at => message_timestamp,
@@ -71,16 +71,17 @@ module Mailboxer
           :body         => msg_body,
           :subject      => subject,
           :attachment   => attachment,
+          :draft        => draft,
           :created_at   => message_timestamp,
           :updated_at   => message_timestamp
         }).build
 
-        message.deliver false, sanitize_text
+        message.deliver false, sanitize_text, draft
       end
 
       #Basic reply method. USE NOT RECOMMENDED.
       #Use reply_to_sender, reply_to_all and reply_to_conversation instead.
-      def reply(conversation, recipients, reply_body, subject=nil, sanitize_text=true, attachment=nil)
+      def reply(conversation, recipients, reply_body, subject=nil, sanitize_text=true, attachment=nil, draft = false)
         subject = subject || "#{conversation.subject}"
         response = Mailboxer::MessageBuilder.new({
           :sender       => self,
@@ -88,33 +89,34 @@ module Mailboxer
           :recipients   => recipients,
           :body         => reply_body,
           :subject      => subject,
-          :attachment   => attachment
+          :attachment   => attachment,
+          :draft        => draft
         }).build
 
         response.recipients.delete(self)
-        response.deliver true, sanitize_text
+        response.deliver true, sanitize_text, draft
       end
 
       #Replies to the sender of the message in the conversation
-      def reply_to_sender(receipt, reply_body, subject=nil, sanitize_text=true, attachment=nil)
-        reply(receipt.conversation, receipt.message.sender, reply_body, subject, sanitize_text, attachment)
+      def reply_to_sender(receipt, reply_body, subject=nil, sanitize_text=true, attachment=nil, draft = false)
+        reply(receipt.conversation, receipt.message.sender, reply_body, subject, sanitize_text, attachment, draft)
       end
 
       #Replies to all the recipients of the message in the conversation
-      def reply_to_all(receipt, reply_body, subject=nil, sanitize_text=true, attachment=nil)
-        reply(receipt.conversation, receipt.message.recipients, reply_body, subject, sanitize_text, attachment)
+      def reply_to_all(receipt, reply_body, subject=nil, sanitize_text=true, attachment=nil, draft = false)
+        reply(receipt.conversation, receipt.message.recipients, reply_body, subject, sanitize_text, attachment, draft)
       end
 
       #Replies to all the recipients of the last message in the conversation and untrash any trashed message by messageable
       #if should_untrash is set to true (this is so by default)
-      def reply_to_conversation(conversation, reply_body, subject=nil, should_untrash=true, sanitize_text=true, attachment=nil)
+      def reply_to_conversation(conversation, reply_body, subject=nil, should_untrash=true, sanitize_text=true, attachment=nil, draft = false)
         #move conversation to inbox if it is currently in the trash and should_untrash parameter is true.
         if should_untrash && mailbox.is_trashed?(conversation)
           mailbox.receipts_for(conversation).untrash
           mailbox.receipts_for(conversation).mark_as_not_deleted
         end
 
-        reply(conversation, conversation.last_message.recipients, reply_body, subject, sanitize_text, attachment)
+        reply(conversation, conversation.last_message.recipients, reply_body, subject, sanitize_text, attachment, draft)
       end
 
       #Mark the object as read for messageable.
