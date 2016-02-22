@@ -23,6 +23,9 @@ class Mailboxer::Conversation < ActiveRecord::Base
   scope :sentbox, lambda {|participant|
     participant(participant).merge(Mailboxer::Receipt.sentbox.not_trash.not_deleted)
   }
+  scope :drafts, lambda { |participant|
+    participant(participant).merge(Mailboxer::Receipt.drafts)
+  }
   scope :trash, lambda {|participant|
     participant(participant).merge(Mailboxer::Receipt.trash)
   }
