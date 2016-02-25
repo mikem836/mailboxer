@@ -39,7 +39,7 @@ class Mailboxer::Message < Mailboxer::Notification
       Mailboxer::MailDispatcher.new(self, temp_receipts).call if !draft
       temp_receipts.each(&:save!)
 
-      conversation.touch if reply
+      conversation.touch if reply && !draft
 
       self.recipients = nil
 
