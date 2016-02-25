@@ -81,8 +81,9 @@ class Mailboxer::Message < Mailboxer::Notification
   end
 
   #Delivers a draft message
-  def deliver_draft(should_clean = true)
-    self.clean if should_clean
+  def deliver_draft
+    self.draft = false
+    save!
 
     #Receiver receipts
     temp_receipts = receipts.unsent
