@@ -86,7 +86,7 @@ class Mailboxer::Message < Mailboxer::Notification
 
     #Receiver receipts
     temp_receipts = receipts.unsent
-    temp_receipts.update_all(:mailbox_type => :inbox, :trashed => false)
+    temp_receipts.move_to_inbox
 
     #Sender receipt
     sender_receipt = receipts.drafts.first
@@ -95,8 +95,8 @@ class Mailboxer::Message < Mailboxer::Notification
     conversation.touch
 
     temp_receipts << sender_receipt
+
     Mailboxer::MailDispatcher.new(self, temp_receipts).call
-    self.recipients = nil
     on_deliver_callback.call(self) if on_deliver_callback
 
     sender_receipt
