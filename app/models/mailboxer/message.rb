@@ -49,6 +49,37 @@ class Mailboxer::Message < Mailboxer::Notification
     sender_receipt
   end
 
+  #Updates a draft message
+  def update_draft(recipients, msg_body, subject, attachment = nil, reply = false, should_clean = true)
+    self.body       = msg_body
+    self.subject    = subject
+    self.attachment = attachment
+
+    self.clean if should_clean
+
+    conversation.subject = self.subject if subject_changed?
+
+    #Receiver receipts
+    unsent = receipts.unsent
+    temp_receipts = recipients.map { |r|
+      unsent.find { |receipt| receipt.receiver == r } || build_receipt(r, "unsent")
+    }
+
+    #Sender receipt
+    sender_receipt = receipt_for(sender).first || build_receipt(sender, "drafts", true)
+
+    temp_receipts << sender_receipt
+
+    if temp_receipts.all?(&:valid?)
+      self.receipts = temp_receipts
+      save!
+
+      conversation.touch if !reply
+    end
+
+    sender_receipt
+  end
+
   #Delivers a draft message
   def deliver_draft(should_clean = true)
     self.clean if should_clean
