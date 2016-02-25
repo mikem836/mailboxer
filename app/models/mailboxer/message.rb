@@ -48,4 +48,26 @@ class Mailboxer::Message < Mailboxer::Notification
 
     sender_receipt
   end
+
+  #Delivers a draft message
+  def deliver_draft(should_clean = true)
+    self.clean if should_clean
+
+    #Receiver receipts
+    temp_receipts = receipts.unsent
+    temp_receipts.update_all(:mailbox_type => :inbox, :trashed => false)
+
+    #Sender receipt
+    sender_receipt = receipts.drafts.first
+    sender_receipt.move_to_sentbox
+
+    conversation.touch
+
+    temp_receipts << sender_receipt
+    Mailboxer::MailDispatcher.new(self, temp_receipts).call
+    self.recipients = nil
+    on_deliver_callback.call(self) if on_deliver_callback
+
+    sender_receipt
+  end
 end
