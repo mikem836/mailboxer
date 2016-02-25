@@ -100,7 +100,8 @@ module Mailboxer
           :recipients   => recipients,
           :body         => reply_body,
           :subject      => subject,
-          :attachment   => attachment
+          :attachment   => attachment,
+          :draft        => draft
         }).build
 
         response.recipients.delete(self)
