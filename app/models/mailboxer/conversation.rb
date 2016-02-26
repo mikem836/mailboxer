@@ -76,8 +76,8 @@ class Mailboxer::Conversation < ActiveRecord::Base
 
   #Returns an array of participants
   def recipients
-    return [] unless original_message
-    Array original_message.recipients
+    return [] unless last_message
+    Array last_message.recipients
   end
 
   #Returns an array of participants
@@ -101,8 +101,11 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Last message in the conversation.
-  def last_message
-    @last_message ||= messages.order('created_at DESC').first
+  def last_message(include_draft = false)
+    return @last_message if @last_message
+    m = messages
+    m = m.not_draft unless include_draft
+    @last_message = m.order("created_at DESC").first
   end
 
   #Returns the receipts of the conversation for one participants
@@ -111,8 +114,10 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Returns the number of messages of the conversation
-  def count_messages
-    Mailboxer::Message.conversation(self).count
+  def count_messages(include_draft = false)
+    messages = Mailboxer::Message.conversation(self)
+    messages = messages.not_draft unless include_draft
+    messages.count
   end
 
   #Returns true if the messageable is a participant of the conversation
