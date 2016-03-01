@@ -75,14 +75,14 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Returns an array of participants
-  def recipients
-    return [] unless last_message
-    Array last_message.recipients
+  def recipients(include_draft = false)
+    return [] unless last_message(include_draft)
+    Array last_message(include_draft).recipients
   end
 
   #Returns an array of participants
-  def participants
-    recipients
+  def participants(include_draft = false)
+    recipients(include_draft)
   end
 
   #Originator of the conversation.
