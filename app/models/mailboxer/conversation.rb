@@ -127,9 +127,9 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Adds a new participant to the conversation
-  def add_participant(participant)
+  def add_participant(participant, draft = false)
     messages.each do |message|
-      mailbox_type = message.draft ? "unsent" : "inbox"
+      mailbox_type = draft || message.draft ? "unsent" : "inbox"
 
       Mailboxer::ReceiptBuilder.new({
         :notification => message,
