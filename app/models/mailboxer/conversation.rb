@@ -77,7 +77,7 @@ class Mailboxer::Conversation < ActiveRecord::Base
   #Returns an array of participants
   def recipients(include_draft = false)
     return [] unless last_message(include_draft)
-    Array last_message(include_draft).recipients(include_draft)
+    Array last_message(include_draft).recipients
   end
 
   #Returns an array of participants
