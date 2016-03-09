@@ -61,6 +61,10 @@ class Mailboxer::Notification < ActiveRecord::Base
     end
   end
 
+  def decoded_body
+    body.unpack("m").first.force_encoding("UTF-8")
+  end
+
   def expired?
     expires.present? && (expires < Time.now)
   end
@@ -82,6 +86,8 @@ class Mailboxer::Notification < ActiveRecord::Base
   #Use Mailboxer::Models::Messageable.notify and Notification.notify_all instead.
   def deliver(should_clean = true, send_mail = true)
     clean if should_clean
+    self.body = [body].pack("m")
+
     temp_receipts = recipients.map do |r|
       receipts.build(receiver: r, mailbox_type: nil, is_read: false)
     end
