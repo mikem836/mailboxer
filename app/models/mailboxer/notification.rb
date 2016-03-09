@@ -79,14 +79,6 @@ class Mailboxer::Notification < ActiveRecord::Base
     end
   end
 
-  def unencrypted_body
-    body.unpack("u").first
-  end
-
-  def body=(msg_body)
-    self.body = [msg_body].pack("u")
-  end
-
   #Delivers a Notification. USE NOT RECOMMENDED.
   #Use Mailboxer::Models::Messageable.notify and Notification.notify_all instead.
   def deliver(should_clean = true, send_mail = true)
