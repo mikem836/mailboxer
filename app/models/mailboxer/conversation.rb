@@ -127,17 +127,24 @@ class Mailboxer::Conversation < ActiveRecord::Base
   end
 
   #Adds a new participant to the conversation
-  def add_participant(participant, draft = false)
+  def add_participant(participant, draft = false, send_email = false)
+    last = messages.last
+
     messages.each do |message|
       mailbox_type = draft || message.draft ? "unsent" : "inbox"
 
-      Mailboxer::ReceiptBuilder.new({
+      receipt = Mailboxer::ReceiptBuilder.new({
         :notification => message,
         :receiver     => participant,
         :updated_at   => message.updated_at,
         :created_at   => message.created_at,
         :mailbox_type => mailbox_type
-      }).build.save
+      }).build
+      receipt.save
+
+      if send_email && message == last
+        Mailboxer::MailDispatcher.new(message, [receipt]).call
+      end
     end
   end
 
