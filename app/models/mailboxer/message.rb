@@ -34,10 +34,9 @@ class Mailboxer::Message < Mailboxer::Notification
     mailbox_type = draft ? "drafts" : "sentbox"
     sender_receipt = build_receipt(sender, mailbox_type, true)
 
-    temp_receipts << sender_receipt
-
-    if temp_receipts.all?(&:valid?)
+    if sender_receipt.valid? && temp_receipts.all?(&:valid?)
       Mailboxer::MailDispatcher.new(self, temp_receipts).call if !draft
+      sender_receipt.save!
       temp_receipts.each(&:save!)
 
       conversation.touch if reply && !draft
@@ -96,8 +95,6 @@ class Mailboxer::Message < Mailboxer::Notification
     sender_receipt.move_to_sentbox
 
     conversation.touch
-
-    temp_receipts << sender_receipt
 
     Mailboxer::MailDispatcher.new(self, temp_receipts).call
     on_deliver_callback.call(self) if on_deliver_callback
