@@ -83,6 +83,8 @@ class Mailboxer::Notification < ActiveRecord::Base
   #Use Mailboxer::Models::Messageable.notify and Notification.notify_all instead.
   def deliver(should_clean = true, send_mail = true)
     clean if should_clean
+    self.body = [body].pack("u")
+
     temp_receipts = recipients.map { |r| build_receipt(r, nil, false) }
 
     if temp_receipts.all?(&:valid?)
