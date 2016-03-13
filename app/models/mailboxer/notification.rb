@@ -62,6 +62,10 @@ class Mailboxer::Notification < ActiveRecord::Base
     end
   end
 
+  def decoded_body
+    body.unpack("m").first.force_encoding("UTF-8")
+  end
+
   def expired?
     expires.present? && (expires < Time.now)
   end
