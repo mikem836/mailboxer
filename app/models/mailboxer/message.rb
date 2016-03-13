@@ -24,7 +24,7 @@ class Mailboxer::Message < Mailboxer::Notification
   #Use Mailboxer::Models::Messageable.send_message instead.
   def deliver(reply = false, should_clean = true, draft = false)
     self.clean if should_clean
-    self.body = [body].pack("u")
+    self.body = [body].pack("m")
 
     #Receiver receipts
     mailbox_type = draft ? "unsent" : "inbox"
@@ -56,7 +56,7 @@ class Mailboxer::Message < Mailboxer::Notification
     self.attachment = attachment
 
     self.clean if should_clean
-    self.body = [body].pack("u")
+    self.body = [body].pack("m")
 
     conversation.subject = self.subject if subject_changed?
 
