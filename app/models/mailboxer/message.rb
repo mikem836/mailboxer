@@ -97,6 +97,7 @@ class Mailboxer::Message < Mailboxer::Notification
     conversation.touch
 
     Mailboxer::MailDispatcher.new(self, temp_receipts).call
+    temp_receipts.each(&:save!)
     on_deliver_callback.call(self) if on_deliver_callback
 
     sender_receipt
