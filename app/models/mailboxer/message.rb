@@ -87,8 +87,8 @@ class Mailboxer::Message < Mailboxer::Notification
     save!
 
     #Receiver receipts
-    temp_receipts = receipts.unsent
-    temp_receipts.move_to_inbox
+    temp_receipts = receipts.unsent.to_a
+    receipts.unsent.move_to_inbox
 
     #Sender receipt
     sender_receipt = receipts.drafts.first
